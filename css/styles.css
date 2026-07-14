@@ -254,11 +254,18 @@ h1, h2, h3, h4 { font-weight: 800; letter-spacing: -0.01em; line-height: 1.15; }
 }
 .hero-canvas canvas { display: block; width: 100%; height: 100%; }
 
-@media (max-width: 640px) {
-  .hero-canvas { opacity: .55; }
+.hero-scrim {
+  position: absolute; inset: 0;
+  z-index: 2;
+  background: radial-gradient(ellipse 58% 62% at 50% 46%, rgba(11, 9, 20, .6) 0%, rgba(11, 9, 20, .28) 45%, transparent 75%);
+  pointer-events: none;
 }
 
-.hero-content { position: relative; z-index: 2; max-width: 760px; margin: 0 auto; text-align: center; }
+@media (max-width: 640px) {
+  .hero-canvas { opacity: .5; }
+}
+
+.hero-content { position: relative; z-index: 3; max-width: 760px; margin: 0 auto; text-align: center; }
 
 .hero-badge {
   display: inline-flex; align-items: center; gap: 8px;
@@ -407,6 +414,34 @@ h1, h2, h3, h4 { font-weight: 800; letter-spacing: -0.01em; line-height: 1.15; }
 .port-cta svg { width: 16px; height: 16px; transition: transform var(--dur-fast) var(--ease-out); }
 .port-card:hover .port-cta svg { transform: translateX(4px); }
 .port-cta.is-pending { color: var(--ink-soft); }
+
+/* ==========================================================================
+   Meta Ads
+   ========================================================================== */
+.meta-ads {
+  padding: var(--space-24) 0;
+  background: linear-gradient(135deg, #F5F0FF 0%, #FDF2F8 100%);
+}
+.meta-ads-grid {
+  display: grid;
+  grid-template-columns: 1.1fr .9fr;
+  gap: var(--space-16);
+  align-items: center;
+}
+.meta-ads-copy h2 { font-size: clamp(26px, 3.6vw, 38px); margin-top: var(--space-3); margin-bottom: var(--space-4); }
+.meta-ads-copy > p { color: var(--ink-soft); font-size: 16.5px; margin-bottom: var(--space-6); max-width: 46ch; }
+.meta-ads-features { display: flex; flex-direction: column; gap: 12px; margin-bottom: var(--space-8); }
+.meta-ads-features li { display: flex; gap: 10px; align-items: flex-start; font-size: 15px; font-weight: 500; }
+.meta-ads-features svg { width: 18px; height: 18px; color: var(--success); flex-shrink: 0; margin-top: 2px; }
+
+.meta-ads-card-wrap { display: flex; justify-content: center; }
+.meta-ads-card { width: 100%; max-width: 380px; }
+
+@media (max-width: 900px) {
+  .meta-ads-grid { grid-template-columns: 1fr; }
+  .meta-ads-copy > p { max-width: none; }
+  .meta-ads-card-wrap { order: -1; }
+}
 
 /* ==========================================================================
    Process

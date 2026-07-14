@@ -1,8 +1,11 @@
 import * as THREE from "three";
+import { EffectComposer } from "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/postprocessing/EffectComposer.js";
+import { RenderPass } from "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/postprocessing/RenderPass.js";
+import { UnrealBloomPass } from "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/postprocessing/UnrealBloomPass.js";
 
 /**
- * Generative WebGL hero background: a noise-displaced wireframe icosahedron
- * with a fresnel glow, lit by a point light that follows the cursor.
+ * Generative WebGL hero background: a noise-displaced glowing orb — solid
+ * fresnel-rim shading + bloom, lit by a point light that follows the cursor.
  * Vanilla port — no React/build step, loaded as a native ES module.
  */
 (function () {
@@ -13,11 +16,12 @@ import * as THREE from "three";
   if (!mount || !heroSection) return;
 
   var prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var isSmallScreen = window.innerWidth < 640;
 
-  var scene, camera, renderer, mesh, material;
+  var scene, camera, renderer, composer, mesh, material;
   var frameId = null;
   var isVisible = true;
-  var pointerNDC = { x: 0, y: 0 };
+  var pointerNDC = { x: 0.3, y: 0.2 };
 
   function init() {
     scene = new THREE.Scene();
@@ -27,27 +31,30 @@ import * as THREE from "three";
       0.1,
       1000
     );
-    camera.position.z = 3.2;
+    camera.position.z = 3.6;
 
     try {
-      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance" });
     } catch (e) {
       return; // No WebGL support — the CSS gradient blobs stay as the background.
     }
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, isSmallScreen ? 1.5 : 2));
     renderer.setSize(mount.clientWidth, mount.clientHeight);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.15;
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
     mount.appendChild(renderer.domElement);
 
     // Subdivision level 5 (not the raw vertex count) — anything above ~7 here
     // grows exponentially (20 * 4^n faces) and will hang the tab.
-    var geometry = new THREE.IcosahedronGeometry(1.25, 5);
+    var geometry = new THREE.IcosahedronGeometry(1.15, 5);
 
     material = new THREE.ShaderMaterial({
       uniforms: {
         time: { value: 0 },
         pointLightPos: { value: new THREE.Vector3(0, 0, 5) },
-        colorA: { value: new THREE.Color("#C4B5FD") }, // violet-300, matches .hero h1 .grad
-        colorB: { value: new THREE.Color("#F9A8D4") }, // pink-300, matches .hero h1 .grad
+        colorA: { value: new THREE.Color("#A78BFA") }, // violet-400
+        colorB: { value: new THREE.Color("#F472B6") }, // pink-400
         mixT: { value: 0 },
       },
       vertexShader: [
@@ -104,9 +111,9 @@ import * as THREE from "three";
         "",
         "void main() {",
         "    vNormal = normal;",
-        "    vPosition = position;",
-        "    float displacement = snoise(position * 2.0 + time * 0.5) * 0.2;",
+        "    float displacement = snoise(position * 1.8 + time * 0.4) * 0.14;",
         "    vec3 newPosition = position + normal * displacement;",
+        "    vPosition = newPosition;",
         "    gl_Position = projectionMatrix * modelViewMatrix * vec4(newPosition, 1.0);",
         "}",
       ].join("\n"),
@@ -121,31 +128,46 @@ import * as THREE from "three";
         "void main() {",
         "    vec3 color = mix(colorA, colorB, mixT);",
         "    vec3 normal = normalize(vNormal);",
+        "    vec3 viewDir = normalize(cameraPosition - vPosition);",
+        "",
+        "    float fresnel = pow(1.0 - max(dot(normal, viewDir), 0.0), 2.4);",
+        "",
         "    vec3 lightDir = normalize(pointLightPos - vPosition);",
         "    float diffuse = max(dot(normal, lightDir), 0.0);",
         "",
-        "    float fresnel = 1.0 - dot(normal, vec3(0.0, 0.0, 1.0));",
-        "    fresnel = pow(fresnel, 2.0);",
+        "    vec3 core = color * 0.05;",
+        "    vec3 rim = color * fresnel * 1.4;",
+        "    vec3 highlight = color * diffuse * 0.4;",
         "",
-        "    vec3 finalColor = color * diffuse + color * fresnel * 0.5;",
-        "    gl_FragColor = vec4(finalColor, 1.0);",
+        "    gl_FragColor = vec4(core + rim + highlight, 1.0);",
         "}",
       ].join("\n"),
-      wireframe: true,
     });
 
     mesh = new THREE.Mesh(geometry, material);
     scene.add(mesh);
+
+    composer = new EffectComposer(renderer);
+    composer.addPass(new RenderPass(scene, camera));
+    var bloomPass = new UnrealBloomPass(
+      new THREE.Vector2(mount.clientWidth, mount.clientHeight),
+      isSmallScreen ? 0.4 : 0.55, // strength
+      0.45, // radius
+      0.22 // threshold
+    );
+    composer.addPass(bloomPass);
   }
 
   function render(t) {
     if (!prefersReducedMotion) {
-      material.uniforms.time.value = t * 0.0003;
-      material.uniforms.mixT.value = Math.sin(t * 0.00015) * 0.5 + 0.5;
-      mesh.rotation.y += 0.0009;
-      mesh.rotation.x += 0.0004;
+      material.uniforms.time.value = t * 0.00025;
+      material.uniforms.mixT.value = Math.sin(t * 0.00012) * 0.5 + 0.5;
+      mesh.rotation.y += 0.0007;
+      mesh.rotation.x += 0.00035;
+      var breathe = 1 + Math.sin(t * 0.0005) * 0.035;
+      mesh.scale.setScalar(breathe);
     }
-    renderer.render(scene, camera);
+    composer.render();
     if (!prefersReducedMotion && isVisible) {
       frameId = requestAnimationFrame(render);
     }
@@ -163,20 +185,24 @@ import * as THREE from "three";
     pointerNDC.x = (e.clientX / window.innerWidth) * 2 - 1;
     pointerNDC.y = -(e.clientY / window.innerHeight) * 2 + 1;
     updateLightFromPointer();
-    if (prefersReducedMotion) renderer.render(scene, camera);
+    if (prefersReducedMotion) composer.render();
   }
 
   function handleResize() {
     if (!mount.clientWidth || !mount.clientHeight) return;
     camera.aspect = mount.clientWidth / mount.clientHeight;
     camera.updateProjectionMatrix();
-    renderer.setSize(mount.clientWidth, mount.clientHeight);
-    renderer.render(scene, camera);
+    composer.setSize(mount.clientWidth, mount.clientHeight);
+    composer.render();
   }
 
   init();
   if (!renderer) return; // WebGL unavailable — nothing more to do.
 
+  // Force a fresh size sync in case layout wasn't settled at init time
+  // (e.g. fonts/webfont swap still reflowing) — cheap, avoids a 0×0 canvas.
+  handleResize();
+  updateLightFromPointer();
   render(0);
   window.addEventListener("resize", handleResize, { passive: true });
   window.addEventListener("pointermove", handlePointerMove, { passive: true });
