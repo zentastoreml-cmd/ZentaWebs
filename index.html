@@ -12,14 +12,6 @@
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 
 <link rel="stylesheet" href="css/styles.css" />
-
-<script type="importmap">
-{
-  "imports": {
-    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"
-  }
-}
-</script>
 </head>
 <body>
 
@@ -78,7 +70,9 @@
     <div class="hero-glow hero-glow--2" aria-hidden="true"></div>
     <div class="hero-glow hero-glow--3" aria-hidden="true"></div>
     <div class="hero-grid-overlay" aria-hidden="true"></div>
-    <div class="hero-canvas" id="heroCanvas" aria-hidden="true"></div>
+    <div class="hero-canvas" id="heroCanvas" aria-hidden="true">
+      <canvas id="heroGridCanvas"></canvas>
+    </div>
     <div class="hero-scrim" aria-hidden="true"></div>
 
     <div class="container hero-content">
@@ -634,7 +628,7 @@
 
 <script src="js/config.js"></script>
 <script src="js/script.js"></script>
-<script type="module" src="js/hero-scene.js"></script>
+<script src="js/hero-scene.js"></script>
 <script>
   document.getElementById("year").textContent = new Date().getFullYear();
   if (window.ZENTA_CONFIG && window.ZENTA_CONFIG.instagram) {
