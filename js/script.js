@@ -14,7 +14,11 @@
     el.setAttribute("href", buildWaLink(cfg.whatsappNumber, cfg.whatsappMessage));
   });
   document.querySelectorAll("[data-email-link]").forEach(function (el) {
-    if (cfg.email) el.setAttribute("href", "mailto:" + cfg.email);
+    if (!cfg.email) return;
+    var subject = el.getAttribute("data-email-subject");
+    var href = "mailto:" + cfg.email;
+    if (subject) href += "?subject=" + encodeURIComponent(subject);
+    el.setAttribute("href", href);
   });
 
   function wireDemoLink(selector, url) {

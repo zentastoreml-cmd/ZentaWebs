@@ -7,7 +7,7 @@ window.ZENTA_CONFIG = {
   whatsappNumber: "5491100000000", // TODO: reemplazar por el número real
   whatsappMessage: "Hola! Vi la página de Zenta Webs y quiero armar un sitio para mi negocio.",
 
-  email: "hola@zentawebs.com", // TODO: reemplazar por el mail real
+  email: "zentastoreml@gmail.com",
   instagram: "https://instagram.com/", // TODO: agregar usuario real
 
   // Links de las demos — todas publicadas.
