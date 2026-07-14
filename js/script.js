@@ -37,6 +37,7 @@
   wireDemoLink("[data-demo='dejara']", cfg.demoDejara);
   wireDemoLink("[data-demo='ovidio']", cfg.demoOvidio);
   wireDemoLink("[data-demo='inmobiliaria']", cfg.demoInmobiliaria);
+  wireDemoLink("[data-demo='inmobiliaria-generica']", cfg.demoInmobiliariaGenerica);
 
   /* ---------- Header: shrink + mobile menu ---------- */
   var header = document.getElementById("siteHeader");

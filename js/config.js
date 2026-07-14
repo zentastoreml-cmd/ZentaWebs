@@ -15,4 +15,5 @@ window.ZENTA_CONFIG = {
   demoDejara: "https://dejarasalon.netlify.app/",
   demoOvidio: "https://ovidioristorante.netlify.app/",
   demoInmobiliaria: "https://ag-valencia.netlify.app/",
+  demoInmobiliariaGenerica: "https://inmobilliaria-generica.zentastoreml.workers.dev/",
 };
